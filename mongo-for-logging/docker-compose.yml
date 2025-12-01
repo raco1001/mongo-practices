@@ -1,0 +1,69 @@
+services:
+  mongo1:
+    image: mongo:8.0.9
+    container_name: mongo1
+    hostname: mongo1
+    volumes:
+      - mongo1-data:/data/db
+      - ./keyfile/mongodb-keyfile:/tmp/mongodb-keyfile:ro
+    ports:
+      - "37017:27017"
+    networks:
+      - mongo-network
+    entrypoint: >
+      bash -c '
+        mkdir -p /data/keyfile &&
+        cp /tmp/mongodb-keyfile /data/keyfile/mongodb-keyfile &&
+        chmod 400 /data/keyfile/mongodb-keyfile &&
+        chown mongodb:mongodb /data/keyfile/mongodb-keyfile &&
+        exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --auth --keyFile /data/keyfile/mongodb-keyfile
+      '
+
+  mongo2:
+    image: mongo:8.0.9
+    container_name: mongo2
+    hostname: mongo2
+    volumes:
+      - mongo2-data:/data/db
+      - ./keyfile/mongodb-keyfile:/tmp/mongodb-keyfile:ro
+    ports:
+      - "37018:27017"
+    networks:
+      - mongo-network
+    entrypoint: >
+      bash -c '
+        mkdir -p /data/keyfile &&
+        cp /tmp/mongodb-keyfile /data/keyfile/mongodb-keyfile &&
+        chmod 400 /data/keyfile/mongodb-keyfile &&
+        chown mongodb:mongodb /data/keyfile/mongodb-keyfile &&
+        exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --auth --keyFile /data/keyfile/mongodb-keyfile
+      '
+
+  mongo3:
+    image: mongo:8.0.9
+    container_name: mongo3
+    hostname: mongo3
+    volumes:
+      - mongo3-data:/data/db
+      - ./keyfile/mongodb-keyfile:/tmp/mongodb-keyfile:ro
+    ports:
+      - "37019:27017"
+    networks:
+      - mongo-network
+    entrypoint: >
+      bash -c '
+        mkdir -p /data/keyfile &&
+        cp /tmp/mongodb-keyfile /data/keyfile/mongodb-keyfile &&
+        chmod 400 /data/keyfile/mongodb-keyfile &&
+        chown mongodb:mongodb /data/keyfile/mongodb-keyfile &&
+        exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --auth --keyFile /data/keyfile/mongodb-keyfile
+      '
+
+networks:
+  mongo-network:
+    driver: bridge
+
+volumes:
+  mongo1-data:
+  mongo2-data:
+  mongo3-data:

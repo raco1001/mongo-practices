@@ -1,0 +1,86 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.tabSize": 2,
+  "editor.fontFamily": "'Fira Code', Consolas",
+  "workbench.tree.indent": 4,
+  "workbench.colorTheme": "Dracula Theme Soft",
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.options": {
+    "overrideConfigFile": "eslint.config.mjs"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/CVS": true,
+    "**/node_modules": true,
+    "**/Thumbs.db": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.configPath": ".vscode/settings.json",
+  "prettier.endOfLine": "lf",
+  "workbench.colorCustomizations": {
+    "[Dracula Theme Soft]": {
+      "activityBar.background": "#1e1e1e",
+      "activityBar.foreground": "#4DB33D",
+      "activityBarBadge.background": "#4DB33D",
+      "activityBarBadge.foreground": "#ffffff",
+      "statusBar.background": "#1a1a1a",
+      "statusBar.foreground": "#cccccc",
+      "statusBarItem.hoverBackground": "#2d2d2d",
+      "statusBarItem.remoteBackground": "#4DB33D",
+      "statusBarItem.remoteForeground": "#ffffff",
+      "titleBar.activeBackground": "#1a1a1a",
+      "titleBar.activeForeground": "#cccccc",
+      "titleBar.inactiveBackground": "#1e1e1e",
+      "titleBar.inactiveForeground": "#666666",
+      "editorGroupHeader.tabsBackground": "#1e1e1e",
+      "tab.activeBackground": "#2d2d2d",
+      "tab.activeForeground": "#4DB33D",
+      "tab.inactiveBackground": "#1e1e1e",
+      "tab.inactiveForeground": "#888888",
+      "tab.hoverBackground": "#252525",
+      "list.activeSelectionBackground": "#2d2d2d",
+      "list.activeSelectionForeground": "#4DB33D",
+      "list.hoverBackground": "#252525",
+      "editorLineNumber.activeForeground": "#4DB33D",
+      "editorLineNumber.foreground": "#666666",
+      "editorCursor.foreground": "#4DB33D",
+      "editor.selectionBackground": "#4DB33D40",
+      "editor.wordHighlightBackground": "#4DB33D20",
+      "editor.findMatchBackground": "#4DB33D60",
+      "editor.findMatchHighlightBackground": "#4DB33D30",
+      "terminal.background": "#1a1a1a",
+      "terminal.foreground": "#cccccc",
+      "terminalCursor.foreground": "#4DB33D",
+      "terminal.selectionBackground": "#4DB33D40",
+      "panel.background": "#1a1a1a",
+      "panelTitle.activeForeground": "#4DB33D",
+      "button.background": "#4DB33D",
+      "button.foreground": "#ffffff",
+      "button.hoverBackground": "#5ac94a"
+    }
+  },
+  "editor.tokenColorCustomizations": {
+    "[Dracula Theme Soft]": {
+      "comments": "#6272a4",
+      "strings": "#50fa7b",
+      "numbers": "#ffb86c",
+      "keywords": "#ff79c6",
+      "functions": "#8be9fd",
+      "variables": "#f8f8f2",
+      "types": "#8be9fd"
+    }
+  }
+}

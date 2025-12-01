@@ -519,7 +519,7 @@ createDailyCollections();
 
 ```bash
 # 매일 자정 10 분 전 실행
-0 0 * * * cd /path/to/project && node create-daily-collection.js >> /var/log/mongo-collection-creator.log 2>&1
+50 23 * * * cd /path/to/project && node create-daily-collection.js >> /var/log/mongo-collection-creator.log 2>&1
 ```
 
 ### Docker Compose에 통합

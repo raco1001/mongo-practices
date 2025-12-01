@@ -6,7 +6,7 @@
  *   node examples/create-daily-collection.js
  *
  * Cron 설정 예시 (매일 자정 10 분 전 실행):
- *   0 0 * * * cd /path/to/project && node examples/create-daily-collection.js >> /var/log/mongo-collection-creator.log 2>&1
+ *   50 23 * * * cd /path/to/project && node examples/create-daily-collection.js >> /var/log/mongo-collection-creator.log 2>&1
  */
 
 const { MongoClient } = require("mongodb");

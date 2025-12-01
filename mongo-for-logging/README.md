@@ -289,7 +289,7 @@ async function writeLog(logData) {
   }
 }
 
-// 사용 예
+// Logging Example
 writeLog({
   message: "User login successful",
   details: {
@@ -528,7 +528,7 @@ Add a cron application to Docker Compose:
 
 ```yaml
 services:
-  # ... 기존 mongo1, mongo2, mongo3 ...
+  # ... existing mongo1, mongo2, mongo3 ...
 
   service1-app:
     image: node:20

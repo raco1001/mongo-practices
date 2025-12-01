@@ -202,7 +202,7 @@ mongodb://root:root@localhost:37017,localhost:37018,localhost:37019/?replicaSet=
 
 ### Studio 3T 설정
 
-1. **Connection Type**: ReplicaSet
+1. **Connection Type**: Standalone (각각 설정)
 2. **Servers**:
    - `localhost:37017`
    - `localhost:37018`

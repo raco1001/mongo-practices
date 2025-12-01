@@ -1,27 +1,27 @@
-# MongoDB Log Collection Cluster
+# MongoDB 로그 수집 클러스터
 
-A dedicated MongoDB ReplicaSet cluster optimized for log ingestion using Time-Series collections.
+시계열(Time-Series) 컬렉션을 사용한 로그 수집 전용 MongoDB ReplicaSet 클러스터입니다.
 
-## Table of Contents
+## 목차
 
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Security](#security)
-- [Database Structure](#database-structure)
-- [External Access](#external-access-studio-3t-compass-etc)
-- [Application Integration](#application-integration)
-  - [Node.js Example](#nodejs-example)
-  - [Python Example](#python-example)
-  - [Automatic Collection Creation](#automatic-collection-creation)
-- [Example Code](#example-code)
-- [Adding Services](#adding-services)
-- [Resetting the Cluster](#resetting-the-cluster)
-- [Monitoring](#monitoring)
-- [Troubleshooting](#troubleshooting)
-- [Use Cases](#use-cases)
-- [Best Practices](#best-practices)
+- [구성](#-구성)
+- [빠른 시작](#-빠른-시작)
+- [보안 설정](#-보안-설정)
+- [데이터베이스 구조](#️-데이터베이스-구조)
+- [외부 접속](#-외부-접속-studio-3t-compass-등)
+- [애플리케이션 사용 가이드](#-애플리케이션-사용-가이드)
+  - [Node.js 예제](#nodejs-예제)
+  - [Python 예제](#python-예제)
+  - [컬렉션 자동 생성](#컬렉션-자동-생성)
+- [예제 코드](#-예제-코드)
+- [서비스 추가](#-서비스-추가)
+- [완전 초기화](#-완전-초기화)
+- [모니터링](#-모니터링)
+- [문제 해결](#-문제-해결)
+- [사용 시나리오](#-사용-시나리오)
+- [Best Practices](#-best-practices)
 
-## Architecture
+## 구성
 
 ```bash
 ┌─────────────────────┐     ┌─────────────────────┐
@@ -56,7 +56,7 @@ A dedicated MongoDB ReplicaSet cluster optimized for log ingestion using Time-Se
         │    - service2_log_2025-12-02         │
         │                                      │
         │  KeyFile Authentication              │
-        │  TTL Auto-expiration (30 days)       │
+        │  TTL Auto-expiration (30일)           │
         └──────────────────────────────────────┘
                        ▲
                        │
@@ -68,7 +68,7 @@ A dedicated MongoDB ReplicaSet cluster optimized for log ingestion using Time-Se
            └───────────────────────┘
 ```
 
-## Project Structure
+## 프로젝트 구조
 
 ```bash
 .
@@ -80,15 +80,15 @@ A dedicated MongoDB ReplicaSet cluster optimized for log ingestion using Time-Se
 │   ├── nodejs-write-log.js
 │   └── python-write-log.py
 ├── init
-│   └── init-cluster.js # ReplicaSet initialization logic (executed by init-rs.sh)
-├── init-rs.sh          # Run after docker-compose is up
+│   └── init-cluster.js # 레플리카 셋 초기화 파일. init-rs.sh 가 실행합니다.
+├── init-rs.sh # 도커 컴포즈 정상 동작 확인 후 실행해주세요.
 └── keyfile
-    └── mongodb-keyfile # Must be created manually (instructions below)
+    └── mongodb-keyfile # 직접 생성해야 합니다.(시작하기에 명령어 있습니다.)
 ```
 
-## Getting Started
+## 시작하기
 
-### 1. Create KeyFile & Start Cluster
+### 1. MongoDB 클러스터 시작
 
 ```bash
 mkdir -p ./keyfile &&
@@ -100,60 +100,60 @@ chmod 400 ./keyfile/mongodb-keyfile
 docker-compose up -d
 ```
 
-### 2. Initialize ReplicaSet
+### 2. ReplicaSet 초기화
 
 ```bash
 ./init-rs.sh
 ```
 
-This script performs the following operations:
+초기화 스크립트는 다음 작업을 수행합니다:
 
-- ReplicaSet initialization (`rs0`)
-- Creation of root user (`root / root`)
-- Separate databases for each service (`service1_logs`, `service2_logs`)
-- Per-service application users (readWrite permissions only)
-- Cron user (`log_cron` - collection creation permissions only)
-- Creation of today's Time-Series collections
+- ReplicaSet 초기화 (`rs0`)
+- Root 사용자 생성 (`root / root`)
+- 서비스별 데이터베이스 생성 (`service1_logs`, `service2_logs`)
+- 서비스별 사용자 생성 (각 서비스별 readWrite 권한)
+- Cron 사용자 생성 (`log_cron` - 컬렉션 생성 권한만)
+- 오늘 날짜의 Time-Series 컬렉션 생성
 
-### 3. Verify Connection
+### 3. 연결 확인
 
 ```bash
 docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval "rs.status()"
 ```
 
-## Security
+## 보안 설정
 
 ### KeyFile Authentication
 
-- Inter-node communication in the ReplicaSet is secured with KeyFile
-- `keyfile/mongodb-keyfile` is generated automatically with `600` permissions
+- ReplicaSet 노드 간 통신은 KeyFile로 보호됩니다
+- `keyfile/mongodb-keyfile`은 자동으로 생성되며 `600` 권한으로 설정됩니다
 
-### User Permissions
+### 사용자 권한
 
-| User       | Password   | Permissions                                          | Purpose                   |
-| ---------- | ---------- | ---------------------------------------------------- | ------------------------- |
-| `root`     | `root`     | root                                                 | Administrator             |
-| `service1` | `service1` | readWrite on service1_logs                           | Service1 log read/write   |
-| `service2` | `service2` | readWrite on service2_logs                           | Service2 log read/write   |
-| `log_cron` | `log_cron` | createCollection, createIndex (service\*\_logs only) | Daily collection creation |
+| 사용자     | 비밀번호   | 권한                                                 | 용도                    |
+| ---------- | ---------- | ---------------------------------------------------- | ----------------------- |
+| `root`     | `root`     | root                                                 | 관리자                  |
+| `service1` | `service1` | readWrite on service1_logs                           | Service1 로그 읽기/쓰기 |
+| `service2` | `service2` | readWrite on service2_logs                           | Service2 로그 읽기/쓰기 |
+| `log_cron` | `log_cron` | createCollection, createIndex (service\*\_logs only) | 컬렉션 자동 생성        |
 
-### log_cron User Restrictions
+### log_cron 사용자 제한
 
-The `log_cron` user has minimal permissions only:
+`log_cron` 사용자는 다음과 같은 최소 권한만 가지고 있습니다:
 
-- Can create collections in `service*_logs` databases
-- Can create indexes
-- Can check ReplicaSet status
+- `service*_logs` 데이터베이스에서 컬렉션 생성
+- 인덱스 생성
+- ReplicaSet 상태 확인
 
-- Cannot read/write log data
-- Cannot access system databases
-- Cannot create/delete users
+- 데이터 읽기/쓰기 불가
+- 시스템 DB 접근 불가
+- 사용자 생성/삭제 불가
 
-## Database Structure
+## 데이터베이스 구조
 
-### Time-Series Collections
+### Time-Series 컬렉션
 
-Each service stores logs in one collection per day:
+각 서비스는 날짜별로 별도의 Time-Series 컬렉션을 사용합니다:
 
 ```bash
 service1_logs/
@@ -167,88 +167,88 @@ service2_logs/
   └── ...
 ```
 
-### Collection Configuration
+### 컬렉션 설정
 
 ```javascript
 {
   timeseries: {
-    timeField: 'timestamp',      // Time field
-    metaField: 'meta',            // Metadata field
-    granularity: 'seconds'        // Granularity in seconds
+    timeField: 'timestamp',      // 시간 필드
+    metaField: 'meta',            // 메타데이터 필드
+    granularity: 'seconds'        // 초 단위 그래뉼래리티
   },
-  expireAfterSeconds: 2592000    // TTL: 30 days
+  expireAfterSeconds: 2592000    // TTL: 30일
 }
 ```
 
-**Notes on TTL strategy: This project considers both approaches for hot/cold data separation.**
+**TTL 사용에 대해: 현재 프로젝트는 컬렉션의 핫/콜드 분리 방식 또한 생각해보면서 구성했습니다.**
 
-- For single collection log ingestion → Use TTL for document lifecycle management
-- For daily collection creation (hot/cold separation) → Dropping expired collections may be better than TTL
-- Adjust TTL settings according to your storage policy and query patterns.
+- 로그 데이터 수집에서 단일 컬렉션을 사용하는 경우 -> TTL을 이용해 도큐먼트 수명 관리
+- 로그 데이터 컬렉션을 단위 기간 별로 따로 생성하여 이용하는 경우 (핫(데이터 갱신 중)/콜드(갱신 완료된) 분리)-> TTL을 사용하는 것 보다 기간이 만료된 컬렉션을 한 번에 드랍하는게 나을 수 도 있습니다.
+- 필요에 따라 컬렉션의 TTL 설정을 변경하는 것을 추천합니다.
 
-### Indexes
+### 인덱스
 
 ```javascript
 { 'meta.service': 1, timestamp: -1 }
 ```
 
-## External Access (Studio 3T, Compass, etc.)
+## 외부 접속 (Studio 3T, Compass 등)
 
-### Connection String
+### 연결 문자열
 
 ```bash
 mongodb://root:root@localhost:37017,localhost:37018,localhost:37019/?replicaSet=rs0&authSource=admin
 ```
 
-### Studio 3T Configuration
+### Studio 3T 설정
 
-1. **Connection Type**: Standalone (configure each host separately)
+1. **Connection Type**: Standalone (각각 설정)
 2. **Servers**:
    - `localhost:37017`
    - `localhost:37018`
    - `localhost:37019`
 3. **Replica Set Name**: `rs0`
-4. **Authentication** (default values):
+4. **Authentication**(기본값):
    - Username: `root`
    - Password: `root`
    - Auth DB: `admin`
 
-## Application Integration
+## 애플리케이션 사용 가이드
 
-### Connection Strings
+### 연결 문자열
 
-Each service connects using its own dedicated credentials:
+각 서비스는 자신의 전용 사용자로 접속할 수 있습니다:
 
 ```javascript
-// Service1 Application
+// Service1 애플리케이션
 const MONGO_URI =
   "mongodb://service1:service1@mongo1:27017,mongo2:27017,mongo3:27017/service1_logs?replicaSet=rs0&authSource=admin";
 
-// Service2 Application
+// Service2 애플리케이션
 const MONGO_URI =
   "mongodb://service2:service2@mongo1:27017,mongo2:27017,mongo3:27017/service2_logs?replicaSet=rs0&authSource=admin";
 ```
 
-**Important:**
+**중요:**
 
-- Each service can only read/write **its own database**
-- `authSource=admin` is required (all users are created in admin database)
-- Must connect in ReplicaSet mode (`replicaSet=rs0`)
+- 각 서비스는 **자신의 DB만** 읽기/쓰기 가능
+- `authSource=admin` 필수 (모든 사용자는 admin DB에서 생성됨)
+- ReplicaSet 모드로 연결 (`replicaSet=rs0`)
 
-### Node.js Example
+### Node.js 예제
 
-#### 1. Installation
+#### 1. 설치
 
 ```bash
 npm install mongodb
 ```
 
-#### 2. Writing Logs
+#### 2. 로그 쓰기 코드
 
 ```javascript
 const { MongoClient } = require("mongodb");
 
-// Connection Setting
+// 연결 설정
 const MONGO_URI =
   "mongodb://service1:service1@mongo1:27017,mongo2:27017,mongo3:27017/service1_logs?replicaSet=rs0&authSource=admin";
 const DB_NAME = "service1_logs";
@@ -261,17 +261,17 @@ async function writeLog(logData) {
 
     const db = client.db(DB_NAME);
 
-    // Collection Name with Today's Date String
+    // 오늘 날짜의 컬렉션 이름
     const today = new Date().toISOString().split("T")[0];
     const collectionName = `service1_log_${today}`;
 
     const collection = db.collection(collectionName);
 
-    // Time-Series data format
+    // Time-Series 데이터 형식
     const document = {
-      timestamp: new Date(), // Required: timeField
+      timestamp: new Date(), // 필수: timeField
       meta: {
-        // Required: metaField
+        // 필수: metaField
         service: "service1",
         level: "info",
         component: "api-server",
@@ -281,9 +281,9 @@ async function writeLog(logData) {
     };
 
     await collection.insertOne(document);
-    console.log("Log saved successfully");
+    console.log("로그 저장 성공");
   } catch (error) {
-    console.error("Log save failed:", error);
+    console.error("로그 저장 실패:", error);
   } finally {
     await client.close();
   }
@@ -299,9 +299,9 @@ writeLog({
 });
 ```
 
-#### 3. Bulk Writing (Recommended)
+#### 3. 벌크 쓰기 (권장)
 
-For better performance, save multiple logs at once:
+성능을 위해 여러 로그를 한 번에 저장:
 
 ```javascript
 async function writeBulkLogs(logs) {
@@ -315,7 +315,7 @@ async function writeBulkLogs(logs) {
     const collectionName = `service1_log_${today}`;
     const collection = db.collection(collectionName);
 
-    // Prepare multiple logs as array
+    // 여러 로그를 배열로 준비
     const documents = logs.map((log) => ({
       timestamp: new Date(log.timestamp || Date.now()),
       meta: {
@@ -328,16 +328,16 @@ async function writeBulkLogs(logs) {
     }));
 
     await collection.insertMany(documents);
-    console.log(`${documents.length} logs saved successfully`);
+    console.log(`${documents.length}개 로그 저장 완료`);
   } catch (error) {
-    console.error("Bulk save failed:", error);
+    console.error("벌크 저장 실패:", error);
   } finally {
     await client.close();
   }
 }
 ```
 
-#### 4. Querying Logs
+#### 4. 로그 조회
 
 ```javascript
 async function queryLogs(startDate, endDate, level) {
@@ -351,7 +351,7 @@ async function queryLogs(startDate, endDate, level) {
     const collectionName = `service1_log_${today}`;
     const collection = db.collection(collectionName);
 
-    // Query
+    // 쿼리
     const query = {
       timestamp: {
         $gte: new Date(startDate),
@@ -375,7 +375,7 @@ async function queryLogs(startDate, endDate, level) {
   }
 }
 
-// Usage example: Query today's error logs
+// 사용 예: 오늘의 에러 로그 조회
 const errorLogs = await queryLogs(
   new Date().setHours(0, 0, 0, 0),
   new Date(),
@@ -383,32 +383,32 @@ const errorLogs = await queryLogs(
 );
 ```
 
-### Python Example
+### Python 예제
 
-#### 1. Installation
+#### 1. 설치
 
 ```bash
 pip install pymongo
 ```
 
-#### 2. Writing Logs
+#### 2. 로그 쓰기
 
 ```python
 from pymongo import MongoClient
 from datetime import datetime
 
-# Connection
+# 연결
 MONGO_URI = "mongodb://service1:service1@mongo1:27017,mongo2:27017,mongo3:27017/service1_logs?replicaSet=rs0&authSource=admin"
 client = MongoClient(MONGO_URI)
 db = client.service1_logs
 
 def write_log(message, level='info', details=None):
-    # Today's collection
+    # 오늘 날짜의 컬렉션
     today = datetime.now().strftime('%Y-%m-%d')
     collection_name = f'service1_log_{today}'
     collection = db[collection_name]
 
-    # Time-Series data
+    # Time-Series 데이터
     document = {
         'timestamp': datetime.utcnow(),
         'meta': {
@@ -421,9 +421,9 @@ def write_log(message, level='info', details=None):
     }
 
     collection.insert_one(document)
-    print('Log saved successfully')
+    print('로그 저장 완료')
 
-# Usage example
+# 사용 예
 write_log(
     message='Database connection established',
     level='info',
@@ -431,13 +431,13 @@ write_log(
 )
 ```
 
-### Automatic Collection Creation
+### 컬렉션 자동 생성
 
-**Important:** Application users **cannot create collections**.
+**중요:** 각 서비스 사용자는 컬렉션 생성 권한이 **없습니다**.
 
-New daily collections must be created using one of these methods:
+새로운 날짜의 컬렉션은 다음 방법으로 생성해야 합니다:
 
-#### Method 1: Manual Creation (Admin)
+#### 방법 1: 수동 생성 (관리자)
 
 ```bash
 docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval "
@@ -456,9 +456,9 @@ docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval
 "
 ```
 
-#### Method 2: Cron Job (Automation)
+#### 방법 2: Cron Job (자동화)
 
-Run a script that creates new collections daily at midnight using the `log_cron` user:
+`log_cron` 사용자로 매일 자정에 새 컬렉션을 자동 생성하는 스크립트를 실행:
 
 ```javascript
 // create-daily-collection.js
@@ -498,10 +498,10 @@ async function createDailyCollections() {
           timestamp: -1,
         });
 
-        console.log(`✔ ${collectionName} created successfully`);
+        console.log(`✔ ${collectionName} 생성 완료`);
       } catch (error) {
         if (error.code === 48) {
-          console.log(`✔ ${collectionName} already exists`);
+          console.log(`✔ ${collectionName} 이미 존재`);
         } else {
           throw error;
         }
@@ -515,16 +515,16 @@ async function createDailyCollections() {
 createDailyCollections();
 ```
 
-**Linux Crontab Configuration:**
+**Linux Crontab 설정:**
 
 ```bash
-# Run daily at 23:50 (10 minutes before midnight)
+# 매일 자정 10 분 전 실행
 50 23 * * * cd /path/to/project && node create-daily-collection.js >> /var/log/mongo-collection-creator.log 2>&1
 ```
 
-### Docker Compose Integration
+### Docker Compose에 통합
 
-Add a cron application to Docker Compose:
+크론 애플리케이션을 Docker Compose에 추가:
 
 ```yaml
 services:
@@ -542,26 +542,26 @@ services:
       - mongo3
 ```
 
-### Important Notes
+### 주의사항
 
-1. **Collections Must Be Created in Advance**
+1. **컬렉션 미리 생성 필요**
 
-   - Application users cannot create collections
-   - Create next day's collections before midnight daily (set 10 minutes early for safety)
+   - 서비스 사용자는 컬렉션 생성 불가
+   - 매일 자정 10 분 전에 다음 날 컬렉션을 미리 생성해야 함 (정각 보단 미리 만드는게 안전할 것 같아서 이렇게 설정했습니다.)
 
-2. **Time-Series Required Fields**
+2. **Time-Series 필수 필드**
 
-   - `timestamp`: Date object (required)
-   - `meta`: Object (required, stores metadata)
+   - `timestamp`: Date 객체 (필수)
+   - `meta`: Object (필수, 메타데이터 저장)
 
-3. **Error Handling**
+3. **에러 처리**
 
-   - Missing collections cause errors
-   - Try-catch error handling is mandatory
+   - 컬렉션이 없으면 에러 발생
+   - Try-catch로 에러 처리 필수
 
-4. **Connection Pool Management**
-   - Use connection pools in production
-   - Reuse connections instead of connecting/disconnecting repeatedly
+4. **연결 풀 관리**
+   - 프로덕션에서는 연결 풀 사용 권장
+   - 매번 연결/해제하지 말고 재사용
 
 ```javascript
 let cachedClient = null;
@@ -581,60 +581,60 @@ async function getMongoClient() {
 }
 ```
 
-## Example Code
+## 예제 코드
 
-Runnable example code can be found in the [`examples/`](./examples) directory:
+실행 가능한 예제 코드는 [`examples/`](./examples) 디렉토리에서 확인할 수 있습니다:
 
-### Available Examples
+### 제공 예제
 
-1. **`nodejs-write-log.js`** - Node.js log writing/querying example
+1. **`nodejs-write-log.js`** - Node.js 로그 쓰기/조회 예제
 
    ```bash
    npm install mongodb
    node examples/nodejs-write-log.js
    ```
 
-2. **`python-write-log.py`** - Python log writing/querying example
+2. **`python-write-log.py`** - Python 로그 쓰기/조회 예제
 
    ```bash
    pip install pymongo
    python examples/python-write-log.py
    ```
 
-3. **`create-daily-collection.js`** - Daily collection auto-creation script
+3. **`create-daily-collection.js`** - 일별 컬렉션 자동 생성 스크립트
 
    ```bash
    node examples/create-daily-collection.js
    ```
 
-See [examples/README.md](./examples/README.md) for detailed information.
+자세한 내용은 [examples/README.md](./examples/README.md)를 참조하세요.
 
-## Adding Services
+## 서비스 추가
 
-### Modify Configuration
+### .env 파일 수정
 
-To add a new service, modify the `SERVICE_LIST` array in `init/init-cluster.js`:
+새 서비스를 추가하려면 `init/init-cluster.js` 파일의 `SERVICE_LIST` 배열을 수정:
 
 ```javascript
 // init/init-cluster.js
-const SERVICE_LIST = ["service1", "service2", "service3"]; // Add service3 - password is auto-set to service name
+const SERVICE_LIST = ["service1", "service2", "service3"]; // service3 추가 && 비밀번호는 서비스 이름으로 자동 설정 됨
 ```
 
-### Run Initialization
+### 초기화 실행
 
 ```bash
 ./init-rs.sh
 ```
 
-Existing data is preserved, only new services are added:
+기존 데이터는 유지되며, 새로운 서비스만 추가됩니다:
 
-- `service3_logs` database created
-- `service3 / service3` user created (readWrite permissions)
-- `service3_log_2025-12-01` collection created
+- `service3_logs` 데이터베이스 생성
+- `service3 / service3` 사용자 생성 (readWrite 권한)
+- `service3_log_2025-12-01` 컬렉션 생성
 
-## Resetting the Cluster
+## 완전 초기화
 
-To delete all data and start fresh:
+모든 데이터를 삭제하고 처음부터 다시 시작하려면:
 
 ```bash
 docker-compose down -v
@@ -643,21 +643,21 @@ sleep 10
 ./init-rs.sh
 ```
 
-## Monitoring
+## 모니터링
 
-### Check ReplicaSet Status
+### ReplicaSet 상태 확인
 
 ```bash
 docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval "rs.status()"
 ```
 
-### List Databases
+### 데이터베이스 목록
 
 ```bash
 docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval "db.getMongo().getDBNames()"
 ```
 
-### Check Collection Sizes
+### 컬렉션 크기 확인
 
 ```bash
 docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval "
@@ -668,33 +668,33 @@ docker exec mongo1 mongosh -u root -p root --authenticationDatabase admin --eval
 "
 ```
 
-## Troubleshooting
+## 문제 해결
 
-### Containers Won't Start
+### 컨테이너가 시작되지 않을 때
 
 ```bash
 docker logs mongo1
 ```
 
-May be a KeyFile permission issue. Check permissions on `keyfile/mongodb-keyfile`.
+KeyFile 권한 문제일 수 있습니다. `keyfile/mongodb-keyfile`의 권한을 확인하세요.
 
-### ReplicaSet Initialization Failure
+### ReplicaSet 초기화 실패
 
 ```bash
 docker exec mongo1 mongosh --eval "rs.status()"
 ```
 
-Check if already initialized, and perform full reset with `docker-compose down -v` if needed.
+이미 초기화되어 있는지 확인하고, 필요시 `docker-compose down -v`로 완전 초기화하세요.
 
-### Authentication Errors
+### 인증 오류
 
-All users are created in the `admin` database, so `--authenticationDatabase admin` must be used.
+모든 사용자는 `admin` 데이터베이스에서 생성되므로, `--authenticationDatabase admin`을 사용해야 합니다.
 
-## Use Cases
+## 사용 시나리오
 
-### 1. Microservice Centralized Logging
+### 1. 마이크로서비스 로그 수집
 
-Each microservice stores logs in its dedicated database:
+각 마이크로서비스가 자신의 전용 데이터베이스에 로그 저장:
 
 ```javascript
 // API Gateway
@@ -704,9 +704,9 @@ writeLog("service1_logs", { endpoint: "/api/users", status: 200 });
 writeLog("service2_logs", { action: "login", user: "john@example.com" });
 ```
 
-### 2. Multi-tenant Log Storage
+### 2. 멀티테넌트 로그 시스템
 
-Separate databases for each tenant (customer):
+각 테넌트(고객)별로 독립된 데이터베이스:
 
 ```javascript
 // tenant1.js
@@ -720,12 +720,12 @@ const client = new MongoClient(
 );
 ```
 
-### 3. Analytics Dashboard
+### 3. 로그 분석 대시보드
 
-Query logs by time range and level:
+시간대별, 레벨별 로그 조회:
 
 ```javascript
-// Recent 1-hour error logs
+// 최근 1시간 에러 로그
 const errors = await collection
   .find({
     timestamp: { $gte: new Date(Date.now() - 3600000) },
@@ -733,7 +733,7 @@ const errors = await collection
   })
   .toArray();
 
-// Specific user's activity logs
+// 특정 사용자의 활동 로그
 const userLogs = await collection
   .find({
     "meta.userId": 12345,
@@ -745,31 +745,31 @@ const userLogs = await collection
 
 ## Best Practices
 
-### 1. Connection Management
+### 1. 연결 관리
 
-- Use connection pools (avoid connect/disconnect on every operation)
-- Verify connections on application startup
-- Implement auto-reconnection logic on errors
+- 연결 풀 사용 (매번 연결/해제 하지 않기)
+- 애플리케이션 시작 시 연결 확인
+- 에러 시 자동 재연결 로직 구현
 
-### 2. Data Modeling
+### 2. 데이터 모델링
 
-- **Always use UTC** for `timestamp`
-- Store indexable information in `meta` field (service names, etc.)
-- Store detailed information in separate fields
+- `timestamp`는 **항상 UTC 사용**
+- `meta` 필드에 인덱스 가능한 정보 저장 (서비스 이름 등)
+- 상세 정보는 별도 필드에 저장
 
-### 3. Performance Optimization
+### 3. 성능 최적화
 
-- Use bulk inserts (insertMany)
-- Set Write Concern appropriately (`w: 1` for logs)
-- Remove unnecessary indexes
+- 벌크 insert 사용 (insertMany)
+- Write Concern 설정 (`w: 1` for 로그)
+- 불필요한 인덱스 제거
 
-### 4. Operations
+### 4. 운영
 
-- Create next day's collections before midnight daily
-- Monitor disk usage (30-day TTL)
-- Regularly check ReplicaSet status
+- 매일 자정 전에 다음 날 컬렉션 미리 생성
+- 디스크 사용량 모니터링 (TTL 30일)
+- ReplicaSet 상태 정기 체크
 
-## References
+## 참고 자료
 
 - [MongoDB Time Series Collections](https://www.mongodb.com/docs/manual/core/timeseries-collections/)
 - [MongoDB ReplicaSet](https://www.mongodb.com/docs/manual/replication/)
